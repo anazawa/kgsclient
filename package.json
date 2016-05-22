@@ -1,0 +1,34 @@
+{
+  "name": "kgsclient",
+  "author": {
+    "name": "Ryo Anazawa",
+    "email": "anazawa@cpan.org"
+  },
+  "description": "",
+  "version": "0.0.1",
+  "homepage": "https://github.com/anazawa/kgsclient",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/anazawa/kgsclient.git"
+  },
+  "main": "lib/kgsclient.js",
+  "dependencies": {},
+  "devDependencies": {
+    "tape": "^3.0.3",
+    "jshint": "^2.5.8"
+  },
+  "scripts": {
+    "clean": "rm -r dist",
+    "lint": "jshint lib/kgsclient.js test/*.js",
+    "pretest": "npm run lint",
+    "test": "tape 'test/test.*.js'",
+    "prebuild": "npm run clean",
+    "build": "node ./scripts/build.js",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  }
+}
