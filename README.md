@@ -55,6 +55,9 @@ poller.send({
 
 ## Description
 
+NOTE: This is an early release, and implementation details of this module
+are still very much in flux. Feedback is welcome.
+
 ### Attributes
 
 #### url = poller.url()
@@ -66,8 +69,8 @@ Returns the API endpoint. Defaults to `"http://metakgs.org/api/access"`.
 #### self = poller.logger(logger)
 
 Can be used to get or set a logger object. Defaults to `kgsPoller.nullLogger`
-that does nothing. A logger object must implement `log`, `info`, `warn`,
-`error` and `debug` methods.
+that does nothing. A logger object must implement `#log`, `#info`, `#warn`,
+`#error` and `#debug` methods.
 
 ### Methods
 

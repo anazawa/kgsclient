@@ -1,15 +1,15 @@
 {
-  "name": "kgsclient",
+  "name": "kgsPoller",
   "author": {
     "name": "Ryo Anazawa",
-    "email": "anazawa@cpan.org"
+    "email": "anazawa@metakgs.org"
   },
   "description": "",
   "version": "0.0.1",
-  "homepage": "https://github.com/anazawa/kgsclient",
+  "homepage": "https://github.com/anazawa/kgspoller",
   "repository": {
     "type": "git",
-    "url": "git://github.com/anazawa/kgsclient.git"
+    "url": "git://github.com/anazawa/kgspoller.git"
   },
   "main": "lib/kgsclient.js",
   "dependencies": {},
@@ -19,7 +19,7 @@
   },
   "scripts": {
     "clean": "rm -r dist",
-    "lint": "jshint lib/kgsclient.js test/*.js",
+    "lint": "jshint lib/kgspoller.js test/*.js",
     "pretest": "npm run lint",
     "test": "tape 'test/test.*.js'",
     "prebuild": "npm run clean",
