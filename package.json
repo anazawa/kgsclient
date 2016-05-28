@@ -4,7 +4,7 @@
     "name": "Ryo Anazawa",
     "email": "anazawa@metakgs.org"
   },
-  "description": "",
+  "description": "Polling library for the KGS protocol",
   "version": "0.0.1",
   "homepage": "https://github.com/anazawa/kgspoller",
   "repository": {

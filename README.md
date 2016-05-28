@@ -1,5 +1,18 @@
 # kgsPoller
 
+Polling library for the KGS protocol
+
+- [Synopsis](#synopsis)
+- [Description](#description)
+    - [Attributes](#attributes)
+    - [Methods](#methods)
+    - [Events](#events)
+    - [Errors](#errors)
+- [Requirements](#requirements)
+- [See Also](#see-also)
+- [Author](#author)
+- [License](#license)
+
 ## Synopsis
 
 In your HTML:
