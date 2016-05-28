@@ -8,6 +8,8 @@ In your HTML:
 <script src="kgspoller.js"></script>
 ```
 
+In your JavaScript:
+
 ```js
 var poller = kgsPoller({
     logger: window.console
@@ -46,19 +48,6 @@ poller.send({
     locale: "en_US"
 });
 
-poller.
-once("SERVER_STATS", function (message) {
-    message;
-    // => {
-    //     type: "SERVER_STATS",
-    //     versionMajor: 3,
-    //     ...
-    // }
-}).
-send({
-    type: "REQUEST_SERVER_STATS"
-});
-
 poller.send({
     type: "LOGOUT"
 });
@@ -70,7 +59,7 @@ poller.send({
 
 #### url = poller.url()
 
-Returns the API endpoint. Defaults to `http://metakgs.org/api/access`.
+Returns the API endpoint. Defaults to `"http://metakgs.org/api/access"`.
 
 #### logger = poller.logger()
 
@@ -107,6 +96,21 @@ Adds a one time `listener` function for the event named `eventName`.
 The next time `eventName` is triggered, this listener is removed
 and then invoked.
 
+```js
+poller.
+once("SERVER_STATS", function (message) {
+    message;
+    // => {
+    //     type: "SERVER_STATS",
+    //     versionMajor: 3,
+    //     ...
+    // }
+}).
+send({
+    type: "REQUEST_SERVER_STATS"
+});
+```
+
 Returns the invocant so calls can be chained.
 
 #### self = poller.off(eventName, listener)
@@ -138,13 +142,25 @@ Returns the invocant so calls can be chained.
 
 #### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])
 
-### Event Names
+#### poller.send(message)
 
-All the uppercase event names are reserved for the KGS JSON protocol.
+### Events
+
+#### KGS_MESSAGE_TYPE
+
+Emitted when a KGS message is received from the server.
+All the uppercase event names are reserved for the KGS protocol.
 
 #### message
 
+Emitted when a KGS message is received from the server.
+
 #### error
+
+Emitted when an error occurs within a `kgsPoller` instance.
+
+If a `kgsPoller` does not have at leaset one listener registered for
+the `error` event, and an `error` event is emitted, the error is thrown.
 
 ### Errors
 
@@ -152,7 +168,11 @@ All the uppercase event names are reserved for the KGS JSON protocol.
 
 #### kgsPollerNotLoggedInError
 
+You tried to send a message when you were not logged in.
+
 #### kgsPollerAlreadyLoggedInError
+
+You tried to log in when you were already logged in.
 
 ## Requirements
 
