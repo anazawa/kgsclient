@@ -131,11 +131,11 @@ Returns the invocant so calls can be chained.
 
 #### self = poller.off(eventName, listener)
 
-Removes the specified `listener` from the listner array
+Removes the specified `listener` from the listener array
 for the event named `eventName`.
 
 Note that this method will remove, at most, one instance of a listener
-form the listener array. If any single listner has been added multiple times
+form the listener array. If any single listener has been added multiple times
 to the listener array for the specified `eventName`, then this method
 must be called multiple times to remove each instance.
 
@@ -159,6 +159,11 @@ Returns the invocant so calls can be chained.
 #### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])
 
 #### poller.send(message)
+
+#### bool = poller.isLoggedIn()
+
+Returns a Boolean value telling whether you can send a message other than
+a `LOGIN` message.
 
 ### Events
 
