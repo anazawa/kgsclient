@@ -81,11 +81,11 @@ Returns the API endpoint. Defaults to `"http://metakgs.org/api/access"`.
 
 #### self = poller.logger(logger)
 
-Can be used to get or set a logger object. Defaults to `kgsPoller.nullLogger`
-that does nothing. A logger object must implement `#log`, `#info`, `#warn`,
+Can be used to get or set a logger object. Defaults to a `kgsPoller.nullLogger`
+object that does nothing. A logger object must implement `#log`, `#info`, `#warn`,
 `#error` and `#debug` methods.
 
-### Methods
+### Instance Methods
 
 #### eventNames = poller.eventNames()
 
@@ -160,10 +160,34 @@ Returns the invocant so calls can be chained.
 
 #### poller.send(message)
 
-#### bool = poller.isLoggedIn()
+#### boolean = poller.isPolling()
+
+Returns a Boolean value telling whether you can send a `LOGIN` message.
+
+```js
+// log in safely
+if (!poller.isPolling()) {
+    poller.send({
+        type: "LOGIN",
+        ...
+    });
+}
+```
+
+#### boolean = poller.isLoggedIn()
 
 Returns a Boolean value telling whether you can send a message other than
 a `LOGIN` message.
+
+```js
+// send a message safely
+if (poller.isLoggedIn()) {
+    poller.send({
+        type: "TYPE_OTHER_THAN_LOGIN",
+        ...
+    });
+}
+```
 
 ### Events
 
@@ -197,17 +221,26 @@ You tried to log in when you were already logged in.
 
 ## Requirements
 
+This module requires the following methods/properties introduced in ES5:
+
 - `Array#forEach`
 - `Array#indexOf`
+- `JSON.parse`
+- `JSON.stringify`
+- `Object.create`
 - `Object.keys`
-- `XMLHttpRequest#response`
+
+This module requires the following methods/properties introduced in
+XMLHttpRequest Level 2:
+
 - `XMLHttpRequest#onload`
 - `XMLHttpRequest#onerror`
+- `XMLHttpRequest#withCredentials`
 
 ## See Also
 
 - [KGS Protocol](http://www.gokgs.com/help/protocol.html)
-- [Node.js - Events](https://nodejs.org/api/events.html)
+- [Node.js - EventEmitter](https://nodejs.org/api/events.html)
 
 ## Author
 
