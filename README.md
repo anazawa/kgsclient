@@ -5,7 +5,7 @@ Polling library for the KGS protocol
 - [Synopsis](#synopsis)
 - [Description](#description)
     - [Attributes](#attributes)
-    - [Methods](#methods)
+    - [Instance Methods](#instance-methods)
     - [Events](#events)
     - [Errors](#errors)
 - [Requirements](#requirements)
