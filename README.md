@@ -160,24 +160,19 @@ Returns the invocant so calls can be chained.
 
 #### poller.send(message)
 
-#### boolean = poller.isPolling()
+#### boolean = poller.isLoggedIn()
 
-Returns a Boolean value telling whether you can send a `LOGIN` message.
+Returns a Boolean value telling whether you are logged in or not.
 
 ```js
 // log in safely
-if (!poller.isPolling()) {
+if (!poller.isLoggedIn()) {
     poller.send({
         type: "LOGIN",
         ...
     });
 }
 ```
-
-#### boolean = poller.isLoggedIn()
-
-Returns a Boolean value telling whether you can send a message other than
-a `LOGIN` message.
 
 ```js
 // send a message safely
