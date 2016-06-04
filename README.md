@@ -230,6 +230,7 @@ XMLHttpRequest Level 2:
 
 - `XMLHttpRequest#onload`
 - `XMLHttpRequest#onerror`
+- `XMLHttpRequest#response`
 - `XMLHttpRequest#withCredentials`
 
 ## See Also
