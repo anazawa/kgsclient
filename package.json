@@ -12,6 +12,12 @@
     "url": "git://github.com/anazawa/kgspoller.git"
   },
   "main": "index.js",
+  "files": [
+      "index.js",
+      "README.md",
+      "package.json",
+      "test"
+  ],
   "dependencies": {},
   "devDependencies": {
     "tape": "^3.0.3",
