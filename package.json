@@ -1,5 +1,5 @@
 {
-  "name": "kgsPoller",
+  "name": "kgspoller",
   "author": {
     "name": "Ryo Anazawa",
     "email": "anazawa@metakgs.org"
@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git://github.com/anazawa/kgspoller.git"
   },
-  "main": "lib/kgsclient.js",
+  "main": "index.js",
   "dependencies": {},
   "devDependencies": {
     "tape": "^3.0.3",

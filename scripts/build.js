@@ -10,8 +10,8 @@ var header = [
     " */\n"
 ].join("");
 
-var body = fs.readFileSync("./lib/sgfgrove.js", "utf8");
+var body = fs.readFileSync("./index.js", "utf8");
 
 fs.mkdirSync("./dist");
-fs.writeFileSync("./dist/sgfgrove.js", header+body);
+fs.writeFileSync("./dist/index.js", header+body);
 
