@@ -158,7 +158,7 @@ Returns the invocant so calls can be chained.
 
 #### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])
 
-#### poller.send(message)
+#### poller.send(message[, onSuccess[, onError]])
 
 #### boolean = poller.isLoggedIn()
 

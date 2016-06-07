@@ -17,7 +17,7 @@
             };
         }(that.initialize));
 
-        that.url = function () {
+        that.url = function (value) {
             return this._url;
         };
 
@@ -33,13 +33,14 @@
             return this._isLoggedIn;
         };
 
-        that._createXMLHttpRequest = function (args) {
+        that._createXMLHttpRequest = function (config) {
             var xhr = new XMLHttpRequest();
-                xhr.open(args.method, args.url, true);
+                xhr.open(config.method, config.url, true);
                 xhr.withCredentials = true;
+                xhr.config = config;
 
-            Object.keys(args.headers || {}).forEach(function (key) {
-                xhr.setRequestHeader(key, args.headers[key]);
+            Object.keys(config.headers || {}).forEach(function (key) {
+                xhr.setRequestHeader(key, config.headers[key]);
             });
 
             var that = this;
@@ -51,7 +52,7 @@
             return xhr;
         };
 
-        that.send = function (message) {
+        that.send = function (message, onSuccess, onError) {
             if (message.type === "LOGIN" && this._isLoggedIn) {
                 throw kgsPoller.error.alreadyLoggedInError();
             }
@@ -79,10 +80,15 @@
                         that._isLoggedIn = false;
                         that._poll();
                     }
+                    onSuccess(xhr);
                 }
                 else {
                     xhr.onerror.call(null);
                 }
+            };
+            xhr.onerror = function () {
+                that._keepPolling = false;
+                onError(xhr);
             };
 
             xhr.send(JSON.stringify(message));
@@ -126,6 +132,10 @@
                 else {
                     xhr.onerror.call(null);
                 }
+            };
+            xhr.onerror = function () {
+                that.emit("error", kgsPoller.error.connectionError(xhr));
+                that._keepPolling = false;
             };
 
             xhr.send(null);
@@ -239,11 +249,10 @@
         return that;
     };
 
-    kgsPoller.error.connectionError = function (xhr, config) {
+    kgsPoller.error.connectionError = function (xhr) {
         return kgsPoller.error({
             type: "kgsPollerConnectionError",
             message: xhr.status ? xhr.status+" "+xhr.statusText : "",
-            config: conifg,
             xhr: xhr
         });
     };
