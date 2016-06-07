@@ -53,6 +53,9 @@
         };
 
         that.send = function (message, onSuccess, onError) {
+            onSuccess = onSuccess || kgsPoller.util.noop;
+            onError = onError || kgsPoller.util.noop;
+
             if (message.type === "LOGIN" && this._isLoggedIn) {
                 throw kgsPoller.error.alreadyLoggedInError();
             }
@@ -144,6 +147,10 @@
         return that.create.apply(that, arguments);
     };
 
+    kgsPoller.util = {
+        noop: function () {}
+    };
+
     kgsPoller.eventEmitter = function () {
         var that = {};
 
@@ -231,11 +238,11 @@
 
     kgsPoller.nullLogger = function () {
         return {
-            error: function () {},
-            warn: function () {},
-            info: function () {},
-            log: function () {},
-            debug: function () {}
+            error: kgsPoller.util.noop,
+            warn: kgsPoller.util.noop,
+            info: kgsPoller.util.noop,
+            log: kgsPoller.util.noop,
+            debug: kgsPoller.util.noop
         };
     };
 
