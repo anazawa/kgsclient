@@ -39,7 +39,7 @@ poller.on("message", function (message) {
 
 poller.on("error", function (error) {
     switch (error.type) {
-        case "kgsPollerConnectionError":
+        case "kgsPollerPollingError":
             // do something with error
             break;
         case "kgsPollerNotLoggedInError":
@@ -223,6 +223,7 @@ This module requires the following methods/properties introduced in ES5:
 
 - `Array#forEach`
 - `Array#indexOf`
+- `Datey.now`
 - `JSON.parse`
 - `JSON.stringify`
 - `Object.create`

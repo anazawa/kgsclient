@@ -5,6 +5,7 @@
 
     var kgsPoller = function () {
         var that = kgsPoller.eventEmitter(); 
+        var ONE_MINUTE = 60*1000;
 
         that.initialize = (function (superInitialize) {
             return function (args) {
@@ -12,6 +13,7 @@
                 args = args || {};
                 this._keepPolling = false;
                 this._isLoggedIn = false;
+                this._lastVisit = 0;
                 this._url = args.url || "http://metakgs.org/api/access";
                 this._logger = args.logger || kgsPoller.nullLogger();
             };
@@ -34,6 +36,9 @@
         };
 
         that.isLoggedIn = function () {
+            if (Date.now()-this._lastVisit > ONE_MINUTE) {
+                this._isLoggedIn = false;
+            }
             return this._isLoggedIn;
         };
 
@@ -54,10 +59,10 @@
             onSuccess = onSuccess || kgsPoller.util.noop;
             onError = onError || kgsPoller.util.noop;
 
-            if (message.type === "LOGIN" && this._isLoggedIn) {
+            if (message.type === "LOGIN" && this.isLoggedIn()) {
                 throw kgsPoller.alreadyLoggedInError();
             }
-            if (message.type !== "LOGIN" && !this._isLoggedIn) {
+            if (message.type !== "LOGIN" && !this.isLoggedIn()) {
                 throw kgsPoller.notLoggedInError();
             }
 
@@ -75,7 +80,7 @@
             var that = this;
             xhr.onload = function () {
                 if (this.status === 200) {
-                    if (!that._keepPolling) {
+                    if (this.config.data.type === "LOGIN") {
                         that.logger().info("Start polling "+this.config.url);
                         that._keepPolling = true;
                         that._isLoggedIn = false;
@@ -106,6 +111,8 @@
             xhr.onload = function () {
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
+
+                    this._lastVisit = Date.now();
 
                     messages.forEach(function (message) {
                         if (message.type === "LOGIN_SUCCESS") {
