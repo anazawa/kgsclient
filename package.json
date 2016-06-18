@@ -18,7 +18,9 @@
       "package.json",
       "test"
   ],
-  "dependencies": {},
+  "dependencies": {
+      "xmlhttprequest": "^1.8.0"
+  },
   "devDependencies": {
     "tape": "^3.0.3",
     "jshint": "^2.5.8"
