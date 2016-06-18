@@ -178,33 +178,27 @@
             return Object.keys(this._listeners);
         };
 
-        that.on = function (event) {
-            this._listeners[event] = this._listeners[event] || [];
-            if (arguments.length > 1) {
-                for (var i = 1; i < arguments.length; i++) {
-                    this._listeners[event].push(arguments[i]);
-                }
+        that.on = function (event, listener) {
+            if (listener) {
+                this._listeners[event] = this._listeners[event] || [];
+                this._listeners[event].push(listener);
                 return this;
             }
-            return this._listeners[event].slice(0);
+            return (this._listeners[event] || []).slice(0);
         };
 
-        that.off = function (arg1, arg2) {
-            if (arg1 && arg2) {
-                if (this._listeners[arg1]) {
-                    var index = this._listeners[arg1].indexOf(arg2);
-                    if (index !== -1) {
-                        this._listeners[arg1].splice(index, 1);
-                    }
+        that.off = function (event, listener) {
+            if (event && listener) {
+                var index = (this._listeners[event] || []).indexOf(listener);
+                if (index >= 0 && this._listeners[event].length > 1) {
+                    this._listeners[event].splice(index, 1);
+                }
+                else if (index >= 0) {
+                    this.off(event);
                 }
             }
-            else if (typeof arg1 === "function") {
-                this.eventNames().forEach(function (event) {
-                    this.off(event, arg1);
-                }, this);
-            }
-            else if (typeof arg1 === "string") {
-                this._listeners[arg1] = [];
+            else if (event) {
+                delete this._listeners[event];
             }
             else {
                 this._listeners = {};
@@ -214,8 +208,8 @@
 
         that.once = function (event, listener) {
             this.on(event, function self() {
+                this.off(event, self);
                 listener.apply(this, arguments);
-                this.off(self);
             });
             return this;
         };

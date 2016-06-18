@@ -152,14 +152,21 @@ Returns the invocant so calls can be chained.
 
 #### self = poller.off(eventName)
 
-#### self = poller.off(listener)
-
 #### self = poller.off()
 
-Removes all listeners.
+Removes all listeners, or those of the specified `eventName`.
 Returns the invocant so calls can be chained.
 
 #### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])
+
+Synchronously calls each of the listeners registered for the event named
+`eventName`, in the order they were registered, passing the supplied arguments
+to each.
+
+Note that the listener function attached to the `kgsPoller` object is called
+as a method on the object (The `this` keyword is set to `poller`).
+
+Returns `true` if the event had listeners, `false` otherwise.
 
 #### poller.send(message[, onSuccess[, onError]])
 
