@@ -2,6 +2,9 @@
 
 Polling library for the KGS protocol
 
+[![Build Status](https://travis-ci.org/anazawa/kgspoller.svg)](https://travis-ci.org/anazawa/kgspoller)
+
+
 - [Synopsis](#synopsis)
 - [Description](#description)
     - [Attributes](#attributes)
@@ -142,7 +145,7 @@ form the listener array. If any single listener has been added multiple times
 to the listener array for the specified `eventName`, then this method
 must be called multiple times to remove each instance.
 
-Note also that onece an event has been emitted, all listeners attached to it
+Note also that once an event has been emitted, all listeners attached to it
 at the time of emitting will be called in order. This implies that
 any `#off` calles *after* emitting and *before* the last listener finished
 execution will not remove them from `#emit` in progress.
@@ -155,6 +158,7 @@ Returns the invocant so calls can be chained.
 #### self = poller.off()
 
 Removes all listeners, or those of the specified `eventName`.
+
 Returns the invocant so calls can be chained.
 
 #### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])

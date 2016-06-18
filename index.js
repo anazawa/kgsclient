@@ -237,7 +237,7 @@
             return listeners.length;
         };
 
-        return that.create.apply(that, arguments);;
+        return that.create.apply(that, arguments);
     };
 
     kgsPoller.nullLogger = function () {

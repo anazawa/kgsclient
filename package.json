@@ -25,7 +25,7 @@
   },
   "scripts": {
     "clean": "rm -r dist",
-    "lint": "jshint lib/kgspoller.js test/*.js",
+    "lint": "jshint index.js test/*.js",
     "pretest": "npm run lint",
     "test": "tape 'test/test.*.js'",
     "prebuild": "npm run clean",
