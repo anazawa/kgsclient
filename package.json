@@ -18,12 +18,11 @@
       "package.json",
       "test"
   ],
-  "dependencies": {
-      "xmlhttprequest": "^1.8.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "tape": "^3.0.3",
-    "jshint": "^2.5.8"
+    "jshint": "^2.5.8",
+    "xmlhttprequest": "^1.8.0"
   },
   "scripts": {
     "clean": "rm -r dist",
