@@ -11,8 +11,9 @@
             return function (args) {
                 superInitialize.apply(that, arguments);
                 args = args || {};
-                this._keepPolling = false;
+                this._isPolling = false;
                 this._isLoggedIn = false;
+                this._keepPolling = false;
                 this._lastVisit = 0;
                 this._url = args.url || "http://metakgs.org/api/access";
                 this._logger = args.logger || kgsPoller.nullLogger();
@@ -20,10 +21,6 @@
         }(that.initialize));
 
         that.url = function (value) {
-            if (arguments.length) {
-                this._url = value;
-                return this;
-            }
             return this._url;
         };
 
@@ -40,6 +37,10 @@
                 this._isLoggedIn = false;
             }
             return this._isLoggedIn;
+        };
+
+        that.isPolling = function () {
+            return this._isPolling;
         };
 
         that._createXMLHttpRequest = function (config) {
@@ -82,8 +83,10 @@
                 if (this.status === 200) {
                     if (this.config.data.type === "LOGIN") {
                         that.logger().info("Start polling "+this.config.url);
-                        that._keepPolling = true;
-                        that._isLoggedIn = false;
+                        that._poll(this.config.url);
+                    }
+                    else if (!that._isPolling) {
+                        that.logger().debug("Restart polling");
                         that._poll(this.config.url);
                     }
                     onSuccess.call(that, this);
@@ -93,15 +96,21 @@
                 }
             };
             xhr.onerror = function () {
-                that._keepPolling = false;
-                that._isLoggedIn = false;
                 onError.call(that, this);
+            };
+            xhr.onabort = function () {
+                this.onerror();
+            };
+            xhr.ontimeout = function () {
+                this.onerror();
             };
 
             xhr.send(JSON.stringify(message));
         };
 
         that._poll = function (url) {
+            this._isPolling = true;
+
             var xhr = this._createXMLHttpRequest({
                 method: "GET",
                 url: url
@@ -112,21 +121,22 @@
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
 
-                    this._lastVisit = Date.now();
+                    that._lastVisit = Date.now();
 
                     messages.forEach(function (message) {
-                        if (message.type === "LOGIN_SUCCESS") {
-                            that._keepPolling = true;
-                            that._isLoggedIn = true;
-                        }
-                        else if (/^LOGIN_FAILED/.test(message.type)) {
-                            that._keepPolling = true;
+                        if (message.type === "HELLO" ||
+                            /^LOGIN_FAILED/.test(message.type)) {
                             that._isLoggedIn = false;
+                            that._keepPolling = true;
                         }
                         else if (message.type === "LOGOUT") {
                             that.logger().info("Stop polling");
-                            that._keepPolling = false;
                             that._isLoggedIn = false;
+                            that._keepPolling = false;
+                        }
+                        else {
+                            that._isLoggedIn = true;
+                            that._keepPolling = true;
                         }
                     });
 
@@ -146,9 +156,16 @@
                 }
             };
             xhr.onerror = function () {
-                that._keepPolling = false;
+                that._isPolling = false;
                 that._isLoggedIn = false;
+                that._keepPolling = false;
                 that.emit("error", kgsPoller.pollingError(this));
+            };
+            xhr.onabort = function () {
+                that._isPolling = false;
+            };
+            xhr.ontimeout = function () {
+                this.onerror();
             };
 
             xhr.send(null);

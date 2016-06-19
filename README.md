@@ -198,6 +198,24 @@ if (poller.isLoggedIn()) {
 }
 ```
 
+#### boolean = poller.isPolling()
+
+Returns a Boolean value telling whether `poller` is polling or not.
+
+```js
+if (poller.isLoggedIn() && !poller.isPolling()) {
+    // Poller stopped polling unexpectedly, so wake it up
+    poller.send({
+        type: "SYNC_REQUEST",
+        callbackKey: 123
+    });
+
+    // After a while...
+    poller.isPolling(); // => true
+}
+```
+
+
 ### Events
 
 #### KGS_MESSAGE_TYPE
