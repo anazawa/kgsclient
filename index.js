@@ -20,7 +20,7 @@
             };
         }(that.initialize));
 
-        that.url = function (value) {
+        that.url = function () {
             return this._url;
         };
 
@@ -119,9 +119,9 @@
             var that = this;
             xhr.onload = function () {
                 if (this.status === 200) {
-                    var messages = JSON.parse(this.response).messages || [];
-
                     that._lastVisit = Date.now();
+
+                    var messages = JSON.parse(this.response).messages || [];
 
                     messages.forEach(function (message) {
                         if (message.type === "HELLO" ||
@@ -163,6 +163,7 @@
             };
             xhr.onabort = function () {
                 that._isPolling = false;
+                that.emit("abort");
             };
             xhr.ontimeout = function () {
                 this.onerror();

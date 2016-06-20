@@ -78,9 +78,7 @@ are still very much in flux. Feedback is welcome.
 
 #### url = poller.url()
 
-#### self = poller.url(url)
-
-Can be used to get or set the API endpoint.
+Can be used to get the API endpoint.
 Defaults to `"http://metakgs.org/api/access"`.
 
 #### logger = poller.logger()
@@ -233,6 +231,8 @@ Emitted when an error occurs within a `kgsPoller` instance.
 
 If a `kgsPoller` does not have at leaset one listener registered for
 the `error` event, and an `error` event is emitted, the error is thrown.
+
+#### abort
 
 ### Errors
 
