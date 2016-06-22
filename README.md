@@ -196,24 +196,6 @@ if (poller.isLoggedIn()) {
 }
 ```
 
-#### boolean = poller.isPolling()
-
-Returns a Boolean value telling whether `poller` is polling or not.
-
-```js
-if (poller.isLoggedIn() && !poller.isPolling()) {
-    // Poller stopped polling unexpectedly, so wake it up
-    poller.send({
-        type: "SYNC_REQUEST",
-        callbackKey: 123
-    });
-
-    // After a while...
-    poller.isPolling(); // => true
-}
-```
-
-
 ### Events
 
 #### KGS_MESSAGE_TYPE
@@ -232,7 +214,21 @@ Emitted when an error occurs within a `kgsPoller` instance.
 If a `kgsPoller` does not have at leaset one listener registered for
 the `error` event, and an `error` event is emitted, the error is thrown.
 
-#### abort
+#### startPolling
+
+Emitted when a `kgsPoller` instance starts polling.
+
+#### stopPolling
+
+Emitted when a `kgsPoller` instance stops polling.
+
+#### login
+
+Emitted when you log in.
+
+#### logout
+
+Emitted when you log out.
 
 ### Errors
 
