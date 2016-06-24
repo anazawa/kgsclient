@@ -73,22 +73,22 @@
                 data: message
             });
 
-            var self = this;
+            var that = this;
             xhr.onload = function () {
                 if (this.status === 200) {
                     if (this.config.data.type === "LOGIN") {
-                        self.logger().info("Start polling "+this.config.url);
-                        self._poll(this.config.url);
-                        self.emit("startPolling");
+                        that.logger().info("Start polling "+this.config.url);
+                        that._poll(this.config.url);
+                        that.emit("startPolling");
                     }
-                    onSuccess.call(self, this);
+                    onSuccess.call(that, this);
                 }
                 else {
                     this.onerror();
                 }
             };
             xhr.onerror = function () {
-                onError.call(self, this);
+                onError.call(that, this);
             };
             xhr.onabort = function () {
                 this.onerror();
@@ -110,44 +110,43 @@
                 url: url
             });
 
-            var self = this;
+            var that = this;
             xhr.onload = function () {
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
                     var keepPolling = true;
 
                     messages.forEach(function (message) {
+                        that.logger().debug("D: "+message.type+":", message);
+
                         switch (message.type) {
                             case "HELLO":
                             case "LOGIN_FAILED_NO_SUCH_USER":
                             case "LOGIN_FAILED_BAD_PASSWORD":
                             case "LOGIN_FAILED_USER_ALREADY_EXISTS":
-                                self._setIsLoggedIn(false);
+                                that._setIsLoggedIn(false);
                                 keepPolling = true;
                                 break;
                             case "LOGOUT":
-                                self._setIsLoggedIn(false);
+                                that._setIsLoggedIn(false);
                                 keepPolling = false;
                                 break;
                             default:
-                                self._setIsLoggedIn(true);
+                                that._setIsLoggedIn(true);
                                 keepPolling = true;
                         }
-                    });
 
-                    messages.forEach(function (message) {
-                        self.logger().debug("D: "+message.type+":", message);
-                        self.emit("message", message);
-                        self.emit(message.type, message);
+                        that.emit("message", message);
+                        that.emit(message.type, message);
                     });
 
                     if (keepPolling) {
-                        self.logger().debug("Keep polling");
-                        self._poll(this.config.url);
+                        that.logger().debug("Keep polling");
+                        that._poll(this.config.url);
                     }
                     else {
-                        self.logger().info("Stop polling");
-                        self.emit("stopPolling");
+                        that.logger().info("Stop polling");
+                        that.emit("stopPolling");
                     }
                 }
                 else {
@@ -155,10 +154,10 @@
                 }
             };
             xhr.onerror = function () {
-                self.logger().info("Stop polling");
-                self._setIsLoggedIn(false);
-                self.emit("error", kgsPoller.pollingError(this));
-                self.emit("stopPolling");
+                that.logger().info("Stop polling");
+                that._setIsLoggedIn(false);
+                that.emit("error", kgsPoller.pollingError(this));
+                that.emit("stopPolling");
             };
             xhr.onabort = function () {
                 this.onerror();
