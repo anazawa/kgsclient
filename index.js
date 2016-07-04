@@ -11,7 +11,7 @@
                 superInitialize.apply(this, arguments);
                 args = args || {};
                 this._isLoggedIn = false;
-                this._url = args.url || "http://metakgs.org/api/access";
+                this._url = args.url || "https://metakgs.org/api/access";
                 this._logger = args.logger || kgsPoller.nullLogger();
             };
         }(that.initialize));
