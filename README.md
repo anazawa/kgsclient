@@ -89,6 +89,29 @@ Can be used to get or set a logger object. Defaults to a `kgsPoller.nullLogger`
 object that does nothing. A logger object must implement `#log`, `#info`, `#warn`,
 `#error` and `#debug` methods.
 
+#### state = poller.state()
+
+Can be used to get the current state of `poller`.
+Defaults to `kgsPoller.LOGGED_OUT`.
+Returns one of the following values:
+
+##### kgsPoller.LOGGING_IN
+
+Indicates you are logging in. You can't send any messages.
+
+##### kgsPoller.LOGGED_IN
+
+Indicates you are logged in. You can send any message except for
+a `LOGIN` message.
+
+##### kgsPoller.LOGGING_OUT
+
+Indicates you are logging out. You can't send any messages.
+
+##### kgsPoller.LOGGED_OUT
+
+Indicates you are logged out. You can send only a `LOGIN` message.
+
 ### Instance Methods
 
 #### eventNames = poller.eventNames()
@@ -172,30 +195,6 @@ Returns `true` if the event had listeners, `false` otherwise.
 
 #### poller.send(message[, onSuccess[, onError]])
 
-#### boolean = poller.isLoggedIn()
-
-Returns a Boolean value telling whether you are logged in or not.
-
-```js
-// log in safely
-if (!poller.isLoggedIn()) {
-    poller.send({
-        type: "LOGIN",
-        ...
-    });
-}
-```
-
-```js
-// send a message safely
-if (poller.isLoggedIn()) {
-    poller.send({
-        type: "TYPE_OTHER_THAN_LOGIN",
-        ...
-    });
-}
-```
-
 ### Events
 
 #### KGS_MESSAGE_TYPE
@@ -222,25 +221,11 @@ Emitted when a `kgsPoller` instance starts polling.
 
 Emitted when a `kgsPoller` instance stops polling.
 
-#### login
-
-Emitted when you log in.
-
-#### logout
-
-Emitted when you log out.
+#### stateChange
 
 ### Errors
 
 #### kgsPollerPollingError
-
-#### kgsPollerNotLoggedInError
-
-You tried to send a message when you were not logged in.
-
-#### kgsPollerAlreadyLoggedInError
-
-You tried to log in when you were already logged in.
 
 ## Requirements
 

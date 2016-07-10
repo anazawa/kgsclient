@@ -6,11 +6,18 @@
     var kgsPoller = function () {
         var that = kgsPoller.eventEmitter(); 
 
+        var noop = kgsPoller.util.noop;
+
+        var LOGGING_IN  = kgsPoller.LOGGING_IN,
+            LOGGED_IN   = kgsPoller.LOGGED_IN,
+            LOGGING_OUT = kgsPoller.LOGGING_OUT,
+            LOGGED_OUT  = kgsPoller.LOGGED_OUT;
+
         that.initialize = (function (superInitialize) {
             return function (args) {
                 superInitialize.apply(this, arguments);
                 args = args || {};
-                this._isLoggedIn = false;
+                this._state = LOGGED_OUT;
                 this._url = args.url || "https://metakgs.org/api/access";
                 this._logger = args.logger || kgsPoller.nullLogger();
             };
@@ -28,15 +35,15 @@
             return this._logger;
         };
 
-        that.isLoggedIn = function () {
-            return this._isLoggedIn;
+        that.state = function () {
+            return this._state;
         };
 
-        that._setIsLoggedIn = function (newValue) {
-            var oldValue = this._isLoggedIn;
-            this._isLoggedIn = newValue;
+        that._setState = function (newValue) {
+            var oldValue = this._state;
+            this._state = newValue;
             if (newValue !== oldValue) {
-                this.emit(newValue ? "login" : "logout");
+                this.emit("stateChange", newValue, oldValue);
             }
         };
 
@@ -54,15 +61,24 @@
         };
 
         that.send = function (message, onSuccess, onError) {
-            onSuccess = onSuccess || kgsPoller.util.noop;
-            onError = onError || kgsPoller.util.noop;
+            onSuccess = onSuccess || noop;
+            onError = onError || noop;
 
-            if (message.type === "LOGIN" && this.isLoggedIn()) {
-                throw kgsPoller.alreadyLoggedInError();
+            if (message.type === "LOGIN" && this.state() !== LOGGED_OUT) {
+                throw kgsPoller.error("You have to log out first");
             }
-            if (message.type !== "LOGIN" && !this.isLoggedIn()) {
-                throw kgsPoller.notLoggedInError();
+            if (message.type !== "LOGIN" && this.state() !== LOGGED_IN) {
+                throw kgsPoller.error("You have to log in first");
             }
+
+            if (message.type === "LOGIN") {
+                this._setState(LOGGING_IN);
+            }
+            else if (message.type === "LOGOUT") {
+                this._setState(LOGGING_OUT);
+            }
+
+            this.logger().debug("U: "+message.type+":", message);
 
             var xhr = this._createXMLHttpRequest({
                 method: "POST",
@@ -76,7 +92,7 @@
             var that = this;
             xhr.onload = function () {
                 if (this.status === 200) {
-                    if (this.config.data.type === "LOGIN") {
+                    if (that.state() === LOGGING_IN) {
                         that.logger().info("Start polling "+this.config.url);
                         that._poll(this.config.url);
                         that.emit("startPolling");
@@ -88,6 +104,7 @@
                 }
             };
             xhr.onerror = function () {
+                that._setState(LOGGED_OUT);
                 onError.call(that, this);
             };
             xhr.onabort = function () {
@@ -98,8 +115,6 @@
             };
 
             xhr.send(JSON.stringify(message));
-
-            this.logger().debug("U: "+message.type+":", message);
 
             return;
         };
@@ -119,21 +134,12 @@
                     messages.forEach(function (message) {
                         that.logger().debug("D: "+message.type+":", message);
 
-                        switch (message.type) {
-                            case "HELLO":
-                            case "LOGIN_FAILED_NO_SUCH_USER":
-                            case "LOGIN_FAILED_BAD_PASSWORD":
-                            case "LOGIN_FAILED_USER_ALREADY_EXISTS":
-                                that._setIsLoggedIn(false);
-                                keepPolling = true;
-                                break;
-                            case "LOGOUT":
-                                that._setIsLoggedIn(false);
-                                keepPolling = false;
-                                break;
-                            default:
-                                that._setIsLoggedIn(true);
-                                keepPolling = true;
+                        if (message.type === "LOGIN_SUCCESS") {
+                            that._setState(LOGGED_IN);
+                        }
+                        else if (message.type === "LOGOUT") {
+                            that._setState(LOGGED_OUT);
+                            keepPolling = false;
                         }
 
                         that.emit("message", message);
@@ -155,7 +161,7 @@
             };
             xhr.onerror = function () {
                 that.logger().info("Stop polling");
-                that._setIsLoggedIn(false);
+                that._setState(LOGGED_OUT);
                 that.emit("error", kgsPoller.pollingError(this));
                 that.emit("stopPolling");
             };
@@ -174,9 +180,10 @@
         return that.create.apply(that, arguments);
     };
 
-    kgsPoller.util = {
-        noop: function () {}
-    };
+    kgsPoller.LOGGING_IN  = 0;
+    kgsPoller.LOGGED_IN   = 1;
+    kgsPoller.LOGGING_OUT = 2;
+    kgsPoller.LOGGED_OUT  = 3;
 
     kgsPoller.eventEmitter = function () {
         var that = {};
@@ -258,12 +265,14 @@
     };
 
     kgsPoller.nullLogger = function () {
+        var noop = kgsPoller.util.noop;
+
         return {
-            error: kgsPoller.util.noop,
-            warn: kgsPoller.util.noop,
-            info: kgsPoller.util.noop,
-            log: kgsPoller.util.noop,
-            debug: kgsPoller.util.noop
+            error: noop,
+            warn: noop,
+            info: noop,
+            log: noop,
+            debug: noop
         };
     };
 
@@ -285,18 +294,8 @@
         });
     };
 
-    kgsPoller.notLoggedInError = function () {
-        return kgsPoller.error({
-            type: "kgsPollerNotLoggedInError",
-            message: "You have to log in first"
-        });
-    };
-
-    kgsPoller.alreadyLoggedInError = function () {
-        return kgsPoller.error({
-            type: "kgsPollerAlreadyLoggedInError",
-            message: "You are already logged in"
-        });
+    kgsPoller.util = {
+        noop: function () {}
     };
 
     if (typeof exports !== "undefined") {
