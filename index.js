@@ -65,10 +65,10 @@
             onError = onError || noop;
 
             if (message.type === "LOGIN" && this.state() !== LOGGED_OUT) {
-                throw kgsPoller.error("You have to log out first");
+                throw new Error("You have to log out first");
             }
             if (message.type !== "LOGIN" && this.state() !== LOGGED_IN) {
-                throw kgsPoller.error("You have to log in first");
+                throw new Error("You have to log in first");
             }
 
             if (message.type === "LOGIN") {
@@ -129,7 +129,6 @@
             xhr.onload = function () {
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
-                    var keepPolling = true;
 
                     messages.forEach(function (message) {
                         that.logger().debug("D: "+message.type+":", message);
@@ -139,14 +138,13 @@
                         }
                         else if (message.type === "LOGOUT") {
                             that._setState(LOGGED_OUT);
-                            keepPolling = false;
                         }
 
                         that.emit("message", message);
                         that.emit(message.type, message);
                     });
 
-                    if (keepPolling) {
+                    if (that.state() !== LOGGED_OUT) {
                         that.logger().debug("Keep polling");
                         that._poll(this.config.url);
                     }
