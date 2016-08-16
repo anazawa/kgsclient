@@ -4,7 +4,7 @@
     var test = require("tape");
     var eventEmitter = require("../index.js").eventEmitter;
 
-    test("kgsPoller.eventEmitter#on", function (t) {
+    test("kgsClient.eventEmitter#on", function (t) {
         var emitter = eventEmitter();
         var listener1 = function () {};
         var listener2 = function () {};
@@ -20,7 +20,7 @@
         t.end();
     });
 
-    test("kgsPoller.eventEmitter#off(event, listener)", function (t) {
+    test("kgsClient.eventEmitter#off(event, listener)", function (t) {
         var emitter = eventEmitter();
         var listener1 = function () {};
         var listener2 = function () {};
@@ -37,7 +37,7 @@
         t.end();
     });
 
-    test("kgsPoller.eventEmitter#off(event)", function (t) {
+    test("kgsClient.eventEmitter#off(event)", function (t) {
         var emitter = eventEmitter();
         var listener1 = function () {};
         var listener2 = function () {};
@@ -51,7 +51,7 @@
         t.end();
     });
 
-    test("kgsPoller.eventEmitter#off()", function (t) {
+    test("kgsClient.eventEmitter#off()", function (t) {
         var emitter = eventEmitter();
         var listener1 = function () {};
         var listener2 = function () {};
@@ -66,7 +66,7 @@
         t.end();
     });
 
-    test("kgsPoller.eventEmitter#eventNames", function (t) {
+    test("kgsClient.eventEmitter#eventNames", function (t) {
         var emitter = eventEmitter();
         var listener1 = function () {};
         var listener2 = function () {};
@@ -88,7 +88,7 @@
         t.end();
     });
 
-    test("kgsPoller.eventEmitter#emit", function (t) {
+    test("kgsClient.eventEmitter#emit", function (t) {
         var emitter = eventEmitter();
 
         t.plan(4);
@@ -104,7 +104,7 @@
         t.equal(count, 1);
     });
 
-    test("kgsPoller.eventEmitter#emit: error", function (t) {
+    test("kgsClient.eventEmitter#emit: error", function (t) {
         var emitter = eventEmitter();
         var error = new Error(); 
 
@@ -127,7 +127,7 @@
         });
     });
 
-    test("kgsPoller.eventEmitter#once", function (t) {
+    test("kgsClient.eventEmitter#once", function (t) {
         var emitter = eventEmitter();
         var count = 0;
 

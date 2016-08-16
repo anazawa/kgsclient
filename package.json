@@ -1,15 +1,15 @@
 {
-  "name": "kgspoller",
+  "name": "kgsclient",
   "author": {
     "name": "Ryo Anazawa",
     "email": "anazawa@metakgs.org"
   },
   "description": "Polling library for the KGS protocol",
   "version": "0.0.1",
-  "homepage": "https://github.com/anazawa/kgspoller",
+  "homepage": "https://github.com/anazawa/kgsclient",
   "repository": {
     "type": "git",
-    "url": "git://github.com/anazawa/kgspoller.git"
+    "url": "git://github.com/anazawa/kgsclient.git"
   },
   "main": "index.js",
   "files": [

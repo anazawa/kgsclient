@@ -3,15 +3,15 @@
 
     var XMLHttpRequest;
 
-    var kgsPoller = function () {
-        var that = kgsPoller.eventEmitter(); 
+    var kgsClient = function () {
+        var that = kgsClient.eventEmitter(); 
 
-        var noop = kgsPoller.util.noop;
+        var noop = kgsClient.util.noop;
 
-        var LOGGING_IN  = kgsPoller.LOGGING_IN,
-            LOGGED_IN   = kgsPoller.LOGGED_IN,
-            LOGGING_OUT = kgsPoller.LOGGING_OUT,
-            LOGGED_OUT  = kgsPoller.LOGGED_OUT;
+        var LOGGING_IN  = kgsClient.LOGGING_IN,
+            LOGGED_IN   = kgsClient.LOGGED_IN,
+            LOGGING_OUT = kgsClient.LOGGING_OUT,
+            LOGGED_OUT  = kgsClient.LOGGED_OUT;
 
         that.initialize = (function (superInitialize) {
             return function (args) {
@@ -19,7 +19,7 @@
                 args = args || {};
                 this._state = LOGGED_OUT;
                 this._url = args.url || "https://metakgs.org/api/access";
-                this._logger = args.logger || kgsPoller.nullLogger();
+                this._logger = args.logger || kgsClient.nullLogger();
             };
         }(that.initialize));
 
@@ -160,7 +160,7 @@
             xhr.onerror = function () {
                 that.logger().info("Stop polling");
                 that._setState(LOGGED_OUT);
-                that.emit("error", kgsPoller.pollingError(this));
+                that.emit("error", kgsClient.pollingError(this));
                 that.emit("stopPolling");
             };
             xhr.onabort = function () {
@@ -178,12 +178,12 @@
         return that.create.apply(that, arguments);
     };
 
-    kgsPoller.LOGGING_IN  = 0;
-    kgsPoller.LOGGED_IN   = 1;
-    kgsPoller.LOGGING_OUT = 2;
-    kgsPoller.LOGGED_OUT  = 3;
+    kgsClient.LOGGING_IN  = 0;
+    kgsClient.LOGGED_IN   = 1;
+    kgsClient.LOGGING_OUT = 2;
+    kgsClient.LOGGED_OUT  = 3;
 
-    kgsPoller.eventEmitter = function () {
+    kgsClient.eventEmitter = function () {
         var that = {};
 
         that.create = function () {
@@ -262,8 +262,8 @@
         return that.create.apply(that, arguments);
     };
 
-    kgsPoller.nullLogger = function () {
-        var noop = kgsPoller.util.noop;
+    kgsClient.nullLogger = function () {
+        var noop = kgsClient.util.noop;
 
         return {
             error: noop,
@@ -274,7 +274,7 @@
         };
     };
 
-    kgsPoller.error = function (that) {
+    kgsClient.error = function (that) {
         that = that || {};
 
         that.toString = function () {
@@ -284,25 +284,25 @@
         return that;
     };
 
-    kgsPoller.pollingError = function (xhr) {
-        return kgsPoller.error({
-            type: "kgsPollerPollingError",
+    kgsClient.pollingError = function (xhr) {
+        return kgsClient.error({
+            type: "kgsClientPollingError",
             message: xhr.status ? xhr.status+" "+xhr.statusText : "",
             xhr: xhr
         });
     };
 
-    kgsPoller.util = {
+    kgsClient.util = {
         noop: function () {}
     };
 
     if (typeof exports !== "undefined") {
         XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-        module.exports = kgsPoller;
+        module.exports = kgsClient;
     }
     else {
         XMLHttpRequest = window.XMLHttpRequest;
-        window.kgsPoller = kgsPoller;
+        window.kgsClient = kgsClient;
     }
 
 }());

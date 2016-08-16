@@ -1,8 +1,8 @@
-# kgsPoller
+# kgsClient
 
 Polling library for the KGS protocol
 
-[![Build Status](https://travis-ci.org/anazawa/kgspoller.svg)](https://travis-ci.org/anazawa/kgspoller)
+[![Build Status](https://travis-ci.org/anazawa/kgsclient.svg)](https://travis-ci.org/anazawa/kgsclient)
 
 
 - [Synopsis](#synopsis)
@@ -21,17 +21,17 @@ Polling library for the KGS protocol
 In your HTML:
 
 ```html
-<script src="kgspoller.js"></script>
+<script src="kgsclient.js"></script>
 ```
 
 In your JavaScript:
 
 ```js
-var poller = kgsPoller({
+var client = kgsClient({
     logger: window.console
 });
 
-poller.on("message", function (message) {
+client.on("message", function (message) {
     message;
     // => {
     //     type: "HELLO",
@@ -40,15 +40,15 @@ poller.on("message", function (message) {
     // }
 });
 
-poller.on("error", function (error) {
+client.on("error", function (error) {
     switch (error.type) {
-        case "kgsPollerPollingError":
+        case "kgsClientPollingError":
             // do something with error
             break;
-        case "kgsPollerNotLoggedInError":
+        case "kgsClientNotLoggedInError":
             // do something with error
             break;
-        case "kgsPollerAlreadyLoggedInError":
+        case "kgsClientAlreadyLoggedInError":
             // do something with error
             break;
         ...
@@ -57,14 +57,14 @@ poller.on("error", function (error) {
     }
 });
 
-poller.send({
+client.send({
     type: "LOGIN",
     name: "myname",
     password: "pa55word",
     locale: "en_US"
 });
 
-poller.send({
+client.send({
     type: "LOGOUT"
 });
 ```
@@ -76,54 +76,54 @@ are still very much in flux. Feedback is welcome.
 
 ### Attributes
 
-#### url = poller.url()
+#### url = client.url()
 
 Can be used to get the API endpoint.
 Defaults to `"http://metakgs.org/api/access"`.
 
-#### logger = poller.logger()
+#### logger = client.logger()
 
-#### self = poller.logger(logger)
+#### self = client.logger(logger)
 
-Can be used to get or set a logger object. Defaults to a `kgsPoller.nullLogger`
+Can be used to get or set a logger object. Defaults to a `kgsClient.nullLogger`
 object that does nothing. A logger object must implement `#log`, `#info`, `#warn`,
 `#error` and `#debug` methods.
 
-#### state = poller.state()
+#### state = client.state()
 
-Can be used to get the current state of `poller`.
-Defaults to `kgsPoller.LOGGED_OUT`.
+Can be used to get the current state of `client`.
+Defaults to `kgsClient.LOGGED_OUT`.
 Returns one of the following values:
 
-##### kgsPoller.LOGGING_IN
+##### kgsClient.LOGGING_IN
 
 Indicates you are logging in. You can't send any messages.
 
-##### kgsPoller.LOGGED_IN
+##### kgsClient.LOGGED_IN
 
 Indicates you are logged in. You can send any message except for
 a `LOGIN` message.
 
-##### kgsPoller.LOGGING_OUT
+##### kgsClient.LOGGING_OUT
 
 Indicates you are logging out. You can't send any messages.
 
-##### kgsPoller.LOGGED_OUT
+##### kgsClient.LOGGED_OUT
 
 Indicates you are logged out. You can send only a `LOGIN` message.
 
 ### Instance Methods
 
-#### eventNames = poller.eventNames()
+#### eventNames = client.eventNames()
 
 Returns an array listing the events for which the emitter has registered
 listeners.
 
-#### listeners = poller.on(eventName)
+#### listeners = client.on(eventName)
 
 Returns a copy of the array of listeners for the event named `eventName`.
 
-#### self = poller.on(eventName, listener)
+#### self = client.on(eventName, listener)
 
 Adds the `listener` function to the end of the listeners array
 for the event named `eventName`. No checks are made to see if the `listener`
@@ -133,14 +133,14 @@ and called, multiple times.
 
 Returns the invocant so calls can be chained.
 
-#### self = poller.once(eventName, listener)
+#### self = client.once(eventName, listener)
 
 Adds a one time `listener` function for the event named `eventName`.
 The next time `eventName` is triggered, this listener is removed
 and then invoked.
 
 ```js
-poller.
+client.
 once("SERVER_STATS", function (message) {
     message;
     // => {
@@ -156,7 +156,7 @@ send({
 
 Returns the invocant so calls can be chained.
 
-#### self = poller.off(eventName, listener)
+#### self = client.off(eventName, listener)
 
 Removes the specified `listener` from the listener array
 for the event named `eventName`.
@@ -174,26 +174,26 @@ Subsequent events will behave as expected.
 
 Returns the invocant so calls can be chained.
 
-#### self = poller.off(eventName)
+#### self = client.off(eventName)
 
-#### self = poller.off()
+#### self = client.off()
 
 Removes all listeners, or those of the specified `eventName`.
 
 Returns the invocant so calls can be chained.
 
-#### listenerCount = poller.emit(eventName, [arg1[, arg2, ...]])
+#### listenerCount = client.emit(eventName, [arg1[, arg2, ...]])
 
 Synchronously calls each of the listeners registered for the event named
 `eventName`, in the order they were registered, passing the supplied arguments
 to each.
 
-Note that the listener function attached to the `kgsPoller` object is called
-as a method on the object (The `this` keyword is set to `poller`).
+Note that the listener function attached to the `kgsClient` object is called
+as a method on the object (The `this` keyword is set to `client`).
 
 Returns `true` if the event had listeners, `false` otherwise.
 
-#### poller.send(message[, onSuccess[, onError]])
+#### client.send(message[, onSuccess[, onError]])
 
 ### Events
 
@@ -208,24 +208,24 @@ Emitted when a KGS message is received from the server.
 
 #### error
 
-Emitted when an error occurs within a `kgsPoller` instance.
+Emitted when an error occurs within a `kgsClient` instance.
 
-If a `kgsPoller` does not have at leaset one listener registered for
+If a `kgsClient` does not have at leaset one listener registered for
 the `error` event, and an `error` event is emitted, the error is thrown.
 
 #### startPolling
 
-Emitted when a `kgsPoller` instance starts polling.
+Emitted when a `kgsClient` instance starts polling.
 
 #### stopPolling
 
-Emitted when a `kgsPoller` instance stops polling.
+Emitted when a `kgsClient` instance stops polling.
 
 #### stateChange
 
 ### Errors
 
-#### kgsPollerPollingError
+#### kgsClientPollingError
 
 ## Requirements
 
