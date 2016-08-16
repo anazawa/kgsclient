@@ -21,7 +21,7 @@ Polling library for the KGS protocol
 In your HTML:
 
 ```html
-<script src="kgsclient.js"></script>
+<script src="index.js"></script>
 ```
 
 In your JavaScript:
@@ -40,32 +40,11 @@ client.on("message", function (message) {
     // }
 });
 
-client.on("error", function (error) {
-    switch (error.type) {
-        case "kgsClientPollingError":
-            // do something with error
-            break;
-        case "kgsClientNotLoggedInError":
-            // do something with error
-            break;
-        case "kgsClientAlreadyLoggedInError":
-            // do something with error
-            break;
-        ...
-        default:
-            throw error;
-    }
-});
-
 client.send({
     type: "LOGIN",
     name: "myname",
     password: "pa55word",
     locale: "en_US"
-});
-
-client.send({
-    type: "LOGOUT"
 });
 ```
 
@@ -79,7 +58,7 @@ are still very much in flux. Feedback is welcome.
 #### url = client.url()
 
 Can be used to get the API endpoint.
-Defaults to `"http://metakgs.org/api/access"`.
+Defaults to `"https://metakgs.org/api/access"`.
 
 #### logger = client.logger()
 
@@ -93,6 +72,7 @@ object that does nothing. A logger object must implement `#log`, `#info`, `#warn
 
 Can be used to get the current state of `client`.
 Defaults to `kgsClient.LOGGED_OUT`.
+See also the event named `stateChange`.
 Returns one of the following values:
 
 ##### kgsClient.LOGGING_IN
@@ -197,11 +177,6 @@ Returns `true` if the event had listeners, `false` otherwise.
 
 ### Events
 
-#### KGS_MESSAGE_TYPE
-
-Emitted when a KGS message is received from the server.
-All the uppercase event names are reserved for the KGS protocol.
-
 #### message
 
 Emitted when a KGS message is received from the server.
@@ -213,15 +188,28 @@ Emitted when an error occurs within a `kgsClient` instance.
 If a `kgsClient` does not have at leaset one listener registered for
 the `error` event, and an `error` event is emitted, the error is thrown.
 
-#### startPolling
+#### xhrError
 
-Emitted when a `kgsClient` instance starts polling.
-
-#### stopPolling
-
-Emitted when a `kgsClient` instance stops polling.
+Emitterd when `client` stopped polling `#url` unexpectedly.
+The listeners registered for this event was called with an `XMLHttpRequest`
+object that was used to poll `#url`.
 
 #### stateChange
+
+Emitted when `#state` is updated. The listeners registered for this event
+are called with two parameters; the new value and the old one.
+
+```js
+var isLoggedIn;
+client.on("stateChange", function (state) {
+    if (state === kgsClient.LOGGED_IN) {
+        isLoggedIn = true;
+    }
+    else if (state === kgsClient.LOGGED_OUT) {
+        isLoggedIn = false;
+    }
+});
+```
 
 ### Errors
 
@@ -233,17 +221,15 @@ This module requires the following methods/properties introduced in ES5:
 
 - `Array#forEach`
 - `Array#indexOf`
-- `Datey.now`
 - `JSON.parse`
 - `JSON.stringify`
 - `Object.create`
-- `Object.keys`
 
 This module requires the following methods/properties introduced in
 XMLHttpRequest Level 2:
 
-- `XMLHttpRequest#onload`
-- `XMLHttpRequest#onerror`
+- `XMLHttpRequest#addEventListener`
+- `XMLHttpRequest#dispatchEvent`
 - `XMLHttpRequest#response`
 - `XMLHttpRequest#withCredentials`
 

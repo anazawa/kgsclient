@@ -1,11 +1,8 @@
 (function () {
     "use strict";
 
-    var XMLHttpRequest;
-
     var kgsClient = function () {
         var that = kgsClient.eventEmitter(); 
-
         var noop = kgsClient.util.noop;
 
         var LOGGING_IN  = kgsClient.LOGGING_IN,
@@ -47,17 +44,8 @@
             }
         };
 
-        that._createXMLHttpRequest = function (config) {
-            var xhr = new XMLHttpRequest();
-                xhr.open(config.method, config.url, true);
-                xhr.withCredentials = true;
-                xhr.config = config;
-
-            Object.keys(config.headers || {}).forEach(function (key) {
-                xhr.setRequestHeader(key, config.headers[key]);
-            });
-
-            return xhr;
+        that.createXmlHttpRequest = function () {
+            return new XMLHttpRequest();
         };
 
         that.send = function (message, onSuccess, onError) {
@@ -80,53 +68,46 @@
 
             this.logger().debug("U: "+message.type+":", message);
 
-            var xhr = this._createXMLHttpRequest({
-                method: "POST",
-                url: this.url(),
-                headers: {
-                    "Content-Type": "application/json; charset=UTF-8"
-                },
-                data: message
-            });
+            var url = this.url();
+            var xhr = this.createXmlHttpRequest();
 
             var that = this;
-            xhr.onload = function () {
+            xhr.addEventListener("load", function () {
                 if (this.status === 200) {
                     if (that.state() === LOGGING_IN) {
-                        that.logger().info("Start polling "+this.config.url);
-                        that._poll(this.config.url);
-                        that.emit("startPolling");
+                        that.logger().info("Start polling "+url);
+                        that._poll(url);
                     }
                     onSuccess.call(that, this);
                 }
                 else {
-                    this.onerror();
+                    this.dispatchEvent("error");
                 }
-            };
-            xhr.onerror = function () {
+            });
+            xhr.addEventListener("error", function () {
                 that._setState(LOGGED_OUT);
                 onError.call(that, this);
-            };
-            xhr.onabort = function () {
-                this.onerror();
-            };
-            xhr.ontimeout = function () {
-                this.onerror();
-            };
+            });
+            xhr.addEventListener("abort", function () {
+                this.dispatchEvent("error");
+            });
+            xhr.addEventListener("timeout", function () {
+                this.dispatchEvent("error");
+            });
 
+            xhr.open("POST", url);
+            xhr.withCredentials = true;
+            xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
             xhr.send(JSON.stringify(message));
 
             return;
         };
 
         that._poll = function (url) {
-            var xhr = this._createXMLHttpRequest({
-                method: "GET",
-                url: url
-            });
+            var xhr = this.createXmlHttpRequest();
 
             var that = this;
-            xhr.onload = function () {
+            xhr.addEventListener("load", function () {
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
 
@@ -141,36 +122,35 @@
                         }
 
                         that.emit("message", message);
-                        that.emit(message.type, message);
                     });
 
                     if (that.state() !== LOGGED_OUT) {
                         that.logger().debug("Keep polling");
-                        that._poll(this.config.url);
+                        that._poll(url);
                     }
                     else {
                         that.logger().info("Stop polling");
-                        that.emit("stopPolling");
                     }
                 }
                 else {
-                    this.onerror();
+                    this.dispatchEvent("error");
                 }
-            };
-            xhr.onerror = function () {
+            });
+            xhr.addEventListener("error", function () {
                 that.logger().info("Stop polling");
                 that._setState(LOGGED_OUT);
-                that.emit("error", kgsClient.pollingError(this));
-                that.emit("stopPolling");
-            };
-            xhr.onabort = function () {
-                this.onerror();
-            };
-            xhr.ontimeout = function () {
-                this.onerror();
-            };
+                that.emit("xhrError", this);
+            });
+            xhr.addEventListener("abort", function () {
+                this.dispatchEvent("error");
+            });
+            xhr.addEventListener("timeout", function () {
+                this.dispatchEvent("error");
+            });
 
-            xhr.send(null);
+            xhr.open("GET", url);
+            xhr.withCredentials = true;
+            xhr.send();
 
             return;
         };
@@ -274,34 +254,14 @@
         };
     };
 
-    kgsClient.error = function (that) {
-        that = that || {};
-
-        that.toString = function () {
-            return this.message ? this.type+": "+this.message : this.type;
-        };
-
-        return that;
-    };
-
-    kgsClient.pollingError = function (xhr) {
-        return kgsClient.error({
-            type: "kgsClientPollingError",
-            message: xhr.status ? xhr.status+" "+xhr.statusText : "",
-            xhr: xhr
-        });
-    };
-
     kgsClient.util = {
         noop: function () {}
     };
 
     if (typeof exports !== "undefined") {
-        XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
         module.exports = kgsClient;
     }
     else {
-        XMLHttpRequest = window.XMLHttpRequest;
         window.kgsClient = kgsClient;
     }
 
