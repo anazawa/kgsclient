@@ -44,13 +44,14 @@
             }
         };
 
-        that.createXmlHttpRequest = function () {
-            return new XMLHttpRequest();
-        };
-
         that.send = function (message, onSuccess, onError) {
             onSuccess = onSuccess || noop;
             onError = onError || noop;
+
+            if (!(message && typeof message === "object" &&
+                  typeof message.type === "string")) {
+                throw new Error("Not a valid KGS message");
+            }
 
             if (message.type === "LOGIN" && this.state() !== LOGGED_OUT) {
                 throw new Error("You have to log out first");
@@ -69,9 +70,13 @@
             this.logger().debug("U: "+message.type+":", message);
 
             var url = this.url();
-            var xhr = this.createXmlHttpRequest();
+            var xhr = new XMLHttpRequest();
 
             var that = this;
+            var _onError = function () {
+                that._setState(LOGGED_OUT);
+                onError.call(that, this);
+            };
             xhr.addEventListener("load", function () {
                 if (this.status === 200) {
                     if (that.state() === LOGGING_IN) {
@@ -81,32 +86,36 @@
                     onSuccess.call(that, this);
                 }
                 else {
-                    this.dispatchEvent("error");
+                    _onError.call(this);
                 }
             });
-            xhr.addEventListener("error", function () {
-                that._setState(LOGGED_OUT);
-                onError.call(that, this);
-            });
-            xhr.addEventListener("abort", function () {
-                this.dispatchEvent("error");
-            });
-            xhr.addEventListener("timeout", function () {
-                this.dispatchEvent("error");
-            });
+            xhr.addEventListener("error", _onError);
+            xhr.addEventListener("abort", _onError);
+            xhr.addEventListener("timeout", _onError);
 
             xhr.open("POST", url);
             xhr.withCredentials = true;
             xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+
+            this.emit("beforeSend", xhr);
             xhr.send(JSON.stringify(message));
 
             return;
         };
 
+        that.composeMessage = function (message) {
+            return JSON.stringify(message);
+        };
+
         that._poll = function (url) {
-            var xhr = this.createXmlHttpRequest();
+            var xhr = new XMLHttpRequest();
 
             var that = this;
+            var onError = function () {
+                that.logger().info("Stop polling");
+                that._setState(LOGGED_OUT);
+                that.emit("pollError", this);
+            };
             xhr.addEventListener("load", function () {
                 if (this.status === 200) {
                     var messages = JSON.parse(this.response).messages || [];
@@ -133,20 +142,12 @@
                     }
                 }
                 else {
-                    this.dispatchEvent("error");
+                    onError.call(this);
                 }
             });
-            xhr.addEventListener("error", function () {
-                that.logger().info("Stop polling");
-                that._setState(LOGGED_OUT);
-                that.emit("xhrError", this);
-            });
-            xhr.addEventListener("abort", function () {
-                this.dispatchEvent("error");
-            });
-            xhr.addEventListener("timeout", function () {
-                this.dispatchEvent("error");
-            });
+            xhr.addEventListener("error", onError);
+            xhr.addEventListener("abort", onError);
+            xhr.addEventListener("timeout", onError);
 
             xhr.open("GET", url);
             xhr.withCredentials = true;
@@ -196,7 +197,7 @@
                     this._listeners[event].splice(index, 1);
                 }
                 else if (index >= 0) {
-                    this.off(event);
+                    delete this._listeners[event];
                 }
             }
             else if (event) {
@@ -218,22 +219,10 @@
 
         that.emit = function (event) {
             var args = Array.prototype.slice.call(arguments, 1);
-            var listeners = this.on(event);
-
-            if (event === "error" && !listeners.length) {
-                throw args[0];
-            }
+            var listeners = this._listeners[event] || [];
 
             listeners.forEach(function (listener) {
-                try {
-                    listener.apply(this, args);
-                }
-                catch (error) {
-                    if (event === "error") {
-                        throw error;
-                    }
-                    this.emit("error", error);
-                }
+                listener.apply(this, args);
             }, this);
 
             return listeners.length;

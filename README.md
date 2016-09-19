@@ -72,7 +72,6 @@ object that does nothing. A logger object must implement `#log`, `#info`, `#warn
 
 Can be used to get the current state of `client`.
 Defaults to `kgsClient.LOGGED_OUT`.
-See also the event named `stateChange`.
 Returns one of the following values:
 
 ##### kgsClient.LOGGING_IN
@@ -91,6 +90,8 @@ Indicates you are logging out. You can't send any messages.
 ##### kgsClient.LOGGED_OUT
 
 Indicates you are logged out. You can send only a `LOGIN` message.
+
+See also the event named `stateChange`.
 
 ### Instance Methods
 
@@ -181,19 +182,6 @@ Returns `true` if the event had listeners, `false` otherwise.
 
 Emitted when a KGS message is received from the server.
 
-#### error
-
-Emitted when an error occurs within a `kgsClient` instance.
-
-If a `kgsClient` does not have at leaset one listener registered for
-the `error` event, and an `error` event is emitted, the error is thrown.
-
-#### xhrError
-
-Emitterd when `client` stopped polling `#url` unexpectedly.
-The listeners registered for this event was called with an `XMLHttpRequest`
-object that was used to poll `#url`.
-
 #### stateChange
 
 Emitted when `#state` is updated. The listeners registered for this event
@@ -211,9 +199,18 @@ client.on("stateChange", function (state) {
 });
 ```
 
-### Errors
+#### error
 
-#### kgsClientPollingError
+Emitted when an error occurs within a `kgsClient` instance.
+
+If a `kgsClient` does not have at leaset one listener registered for
+the `error` event, and an `error` event is emitted, the error is thrown.
+
+#### pollError
+
+Emitterd when `client` stopped polling `#url` unexpectedly.
+The listeners registered for this event are called with an `XMLHttpRequest`
+object that was used to poll `#url`.
 
 ## Requirements
 
@@ -224,6 +221,7 @@ This module requires the following methods/properties introduced in ES5:
 - `JSON.parse`
 - `JSON.stringify`
 - `Object.create`
+- `Object.keys`
 
 This module requires the following methods/properties introduced in
 XMLHttpRequest Level 2:

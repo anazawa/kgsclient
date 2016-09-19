@@ -104,6 +104,7 @@
         t.equal(count, 1);
     });
 
+    /*
     test("kgsClient.eventEmitter#emit: error", function (t) {
         var emitter = eventEmitter();
         var error = new Error(); 
@@ -126,6 +127,7 @@
             emitter.emit("foo");
         });
     });
+    */
 
     test("kgsClient.eventEmitter#once", function (t) {
         var emitter = eventEmitter();
