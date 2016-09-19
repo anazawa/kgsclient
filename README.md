@@ -169,9 +169,6 @@ Synchronously calls each of the listeners registered for the event named
 `eventName`, in the order they were registered, passing the supplied arguments
 to each.
 
-Note that the listener function attached to the `kgsClient` object is called
-as a method on the object (The `this` keyword is set to `client`).
-
 Returns `true` if the event had listeners, `false` otherwise.
 
 #### client.send(message[, onSuccess[, onError]])
@@ -187,28 +184,19 @@ Emitted when a KGS message is received from the server.
 Emitted when `#state` is updated. The listeners registered for this event
 are called with two parameters; the new value and the old one.
 
-```js
-var isLoggedIn;
-client.on("stateChange", function (state) {
-    if (state === kgsClient.LOGGED_IN) {
-        isLoggedIn = true;
-    }
-    else if (state === kgsClient.LOGGED_OUT) {
-        isLoggedIn = false;
-    }
-});
-```
+#### beforeSend
 
-#### error
+Can be used to modify an `XMLHttpRequest` object that is used to send a KGS
+message before it is sent.
 
-Emitted when an error occurs within a `kgsClient` instance.
+#### beforePoll
 
-If a `kgsClient` does not have at leaset one listener registered for
-the `error` event, and an `error` event is emitted, the error is thrown.
+Can be used to modify an `XMLHttpRequest` object that is used to poll `#url`
+before it is sent.
 
 #### pollError
 
-Emitterd when `client` stopped polling `#url` unexpectedly.
+Emitted when `client` stops polling `#url` unexpectedly.
 The listeners registered for this event are called with an `XMLHttpRequest`
 object that was used to poll `#url`.
 
@@ -220,14 +208,12 @@ This module requires the following methods/properties introduced in ES5:
 - `Array#indexOf`
 - `JSON.parse`
 - `JSON.stringify`
-- `Object.create`
 - `Object.keys`
 
 This module requires the following methods/properties introduced in
 XMLHttpRequest Level 2:
 
 - `XMLHttpRequest#addEventListener`
-- `XMLHttpRequest#dispatchEvent`
 - `XMLHttpRequest#response`
 - `XMLHttpRequest#withCredentials`
 

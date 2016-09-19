@@ -1,92 +1,141 @@
 (function () {
     "use strict";
 
-    var kgsClient = function () {
-        var that = kgsClient.eventEmitter(); 
-        var noop = kgsClient.util.noop;
+    var kgsClient = function (args) {
+        args = args || {};
 
-        var LOGGING_IN  = kgsClient.LOGGING_IN,
-            LOGGED_IN   = kgsClient.LOGGED_IN,
+        var noop = function () {},
+            LOGGING_IN = kgsClient.LOGGING_IN,
+            LOGGED_IN = kgsClient.LOGGED_IN,
             LOGGING_OUT = kgsClient.LOGGING_OUT,
-            LOGGED_OUT  = kgsClient.LOGGED_OUT;
+            LOGGED_OUT = kgsClient.LOGGED_OUT;
 
-        that.initialize = (function (superInitialize) {
-            return function (args) {
-                superInitialize.apply(this, arguments);
-                args = args || {};
-                this._state = LOGGED_OUT;
-                this._url = args.url || "https://metakgs.org/api/access";
-                this._logger = args.logger || kgsClient.nullLogger();
+        var self = kgsClient.eventEmitter(),
+            state = LOGGED_OUT,
+            url = args.url || "https://metakgs.org/api/access",
+            logger = args.logger || {
+                error: noop,
+                warn: noop,
+                info: noop,
+                log: noop,
+                debug: noop
             };
-        }(that.initialize));
 
-        that.url = function () {
-            return this._url;
+        self.url = function () {
+            return url;
         };
 
-        that.logger = function (value) {
+        self.logger = function (value) {
             if (arguments.length) {
-                this._logger = value;
-                return this;
+                logger = value;
+                return self;
             }
-            return this._logger;
+            return logger;
         };
 
-        that.state = function () {
-            return this._state;
+        self.state = function () {
+            return state;
         };
 
-        that._setState = function (newValue) {
-            var oldValue = this._state;
-            this._state = newValue;
+        var setState = function (newValue) {
+            var oldValue = state;
+            state = newValue;
             if (newValue !== oldValue) {
-                this.emit("stateChange", newValue, oldValue);
+                self.emit("stateChange", newValue, oldValue);
             }
         };
 
-        that.send = function (message, onSuccess, onError) {
+        var poll = function () {
+            var xhr = new XMLHttpRequest();
+
+            var onError = function () {
+                logger.info("Stop polling");
+                setState(LOGGED_OUT);
+                self.emit("pollError", xhr);
+            };
+            xhr.addEventListener("load", function () {
+                if (xhr.status === 200) {
+                    var messages = JSON.parse(xhr.response).messages || [];
+
+                    messages.forEach(function (message) {
+                        logger.debug("D: "+message.type+":", message);
+
+                        if (message.type === "LOGIN_SUCCESS") {
+                            setState(LOGGED_IN);
+                        }
+                        else if (message.type === "LOGOUT") {
+                            setState(LOGGED_OUT);
+                        }
+
+                        self.emit("message", message);
+                    });
+
+                    if (state !== LOGGED_OUT) {
+                        logger.debug("Keep polling");
+                        poll();
+                    }
+                    else {
+                        logger.info("Stop polling");
+                    }
+                }
+                else {
+                    onError();
+                }
+            });
+            xhr.addEventListener("error", onError);
+            xhr.addEventListener("abort", onError);
+            xhr.addEventListener("timeout", onError);
+
+            xhr.open("GET", url);
+            xhr.withCredentials = true;
+
+            self.emit("beforePoll", xhr);
+            xhr.send();
+
+            return;
+        };
+
+        self.send = function (message, onSuccess, onError) {
             onSuccess = onSuccess || noop;
             onError = onError || noop;
 
             if (!(message && typeof message === "object" &&
                   typeof message.type === "string")) {
-                throw new Error("Not a valid KGS message");
+                throw new TypeError("Not a valid KGS message");
             }
 
-            if (message.type === "LOGIN" && this.state() !== LOGGED_OUT) {
+            if (message.type === "LOGIN" && state !== LOGGED_OUT) {
                 throw new Error("You have to log out first");
             }
-            if (message.type !== "LOGIN" && this.state() !== LOGGED_IN) {
+            if (message.type !== "LOGIN" && state !== LOGGED_IN) {
                 throw new Error("You have to log in first");
             }
 
             if (message.type === "LOGIN") {
-                this._setState(LOGGING_IN);
+                setState(LOGGING_IN);
             }
             else if (message.type === "LOGOUT") {
-                this._setState(LOGGING_OUT);
+                setState(LOGGING_OUT);
             }
 
-            this.logger().debug("U: "+message.type+":", message);
+            logger.debug("U: "+message.type+":", message);
 
-            var url = this.url();
             var xhr = new XMLHttpRequest();
 
-            var that = this;
             var _onError = function () {
-                that._setState(LOGGED_OUT);
-                onError.call(that, this);
+                setState(LOGGED_OUT);
+                onError(xhr);
             };
             xhr.addEventListener("load", function () {
-                if (this.status === 200) {
-                    if (that.state() === LOGGING_IN) {
-                        that.logger().info("Start polling "+url);
-                        that._poll(url);
+                if (xhr.status === 200) {
+                    if (state === LOGGING_IN) {
+                        logger.info("Start polling "+url);
+                        poll();
                     }
-                    onSuccess.call(that, this);
+                    onSuccess(xhr);
                 }
                 else {
-                    _onError.call(this);
+                    _onError();
                 }
             });
             xhr.addEventListener("error", _onError);
@@ -97,66 +146,13 @@
             xhr.withCredentials = true;
             xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
-            this.emit("beforeSend", xhr);
+            self.emit("beforeSend", xhr);
             xhr.send(JSON.stringify(message));
 
             return;
         };
 
-        that.composeMessage = function (message) {
-            return JSON.stringify(message);
-        };
-
-        that._poll = function (url) {
-            var xhr = new XMLHttpRequest();
-
-            var that = this;
-            var onError = function () {
-                that.logger().info("Stop polling");
-                that._setState(LOGGED_OUT);
-                that.emit("pollError", this);
-            };
-            xhr.addEventListener("load", function () {
-                if (this.status === 200) {
-                    var messages = JSON.parse(this.response).messages || [];
-
-                    messages.forEach(function (message) {
-                        that.logger().debug("D: "+message.type+":", message);
-
-                        if (message.type === "LOGIN_SUCCESS") {
-                            that._setState(LOGGED_IN);
-                        }
-                        else if (message.type === "LOGOUT") {
-                            that._setState(LOGGED_OUT);
-                        }
-
-                        that.emit("message", message);
-                    });
-
-                    if (that.state() !== LOGGED_OUT) {
-                        that.logger().debug("Keep polling");
-                        that._poll(url);
-                    }
-                    else {
-                        that.logger().info("Stop polling");
-                    }
-                }
-                else {
-                    onError.call(this);
-                }
-            });
-            xhr.addEventListener("error", onError);
-            xhr.addEventListener("abort", onError);
-            xhr.addEventListener("timeout", onError);
-
-            xhr.open("GET", url);
-            xhr.withCredentials = true;
-            xhr.send();
-
-            return;
-        };
-
-        return that.create.apply(that, arguments);
+        return self;
     };
 
     kgsClient.LOGGING_IN  = 0;
@@ -164,87 +160,63 @@
     kgsClient.LOGGING_OUT = 2;
     kgsClient.LOGGED_OUT  = 3;
 
-    kgsClient.eventEmitter = function () {
-        var that = {};
+    kgsClient.eventEmitter = function (self) {
+        self = self || {};
 
-        that.create = function () {
-            var other = Object.create(this);
-            other.initialize.apply(other, arguments);
-            return other;
+        var listeners = {};
+
+        self.eventNames = function () {
+            return Object.keys(listeners);
         };
 
-        that.initialize = function () {
-            this._listeners = {};
-        };
-
-        that.eventNames = function () {
-            return Object.keys(this._listeners);
-        };
-
-        that.on = function (event, listener) {
+        self.on = function (event, listener) {
             if (listener) {
-                this._listeners[event] = this._listeners[event] || [];
-                this._listeners[event].push(listener);
-                return this;
+                listeners[event] = listeners[event] || [];
+                listeners[event].push(listener);
+                return self;
             }
-            return (this._listeners[event] || []).slice(0);
+            return (listeners[event] || []).slice(0);
         };
 
-        that.off = function (event, listener) {
+        self.off = function (event, listener) {
             if (event && listener) {
-                var index = (this._listeners[event] || []).indexOf(listener);
-                if (index >= 0 && this._listeners[event].length > 1) {
-                    this._listeners[event].splice(index, 1);
+                var index = (listeners[event] || []).indexOf(listener);
+                if (index >= 0 && listeners[event].length > 1) {
+                    listeners[event].splice(index, 1);
                 }
                 else if (index >= 0) {
-                    delete this._listeners[event];
+                    delete listeners[event];
                 }
             }
             else if (event) {
-                delete this._listeners[event];
+                delete listeners[event];
             }
             else {
-                this._listeners = {};
+                listeners = {};
             }
-            return this;
+            return self;
         };
 
-        that.once = function (event, listener) {
-            this.on(event, function self() {
-                this.off(event, self);
-                listener.apply(this, arguments);
+        self.once = function (event, listener) {
+            self.on(event, function _listener() {
+                self.off(event, _listener);
+                listener.apply(null, arguments);
             });
-            return this;
+            return self;
         };
 
-        that.emit = function (event) {
+        self.emit = function (event) {
             var args = Array.prototype.slice.call(arguments, 1);
-            var listeners = this._listeners[event] || [];
+            var _listeners = listeners[event] || [];
 
-            listeners.forEach(function (listener) {
-                listener.apply(this, args);
-            }, this);
+            _listeners.forEach(function (listener) {
+                listener.apply(null, args);
+            });
 
-            return listeners.length;
+            return _listeners.length;
         };
 
-        return that.create.apply(that, arguments);
-    };
-
-    kgsClient.nullLogger = function () {
-        var noop = kgsClient.util.noop;
-
-        return {
-            error: noop,
-            warn: noop,
-            info: noop,
-            log: noop,
-            debug: noop
-        };
-    };
-
-    kgsClient.util = {
-        noop: function () {}
+        return self;
     };
 
     if (typeof exports !== "undefined") {
